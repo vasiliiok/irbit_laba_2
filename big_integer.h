@@ -5,12 +5,9 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <stdexcept>
 #include <cmath>
 #include <ostream>
-#include <sstream>
 #include <algorithm>
-#include <utility>
 
 #define BIG_INTEGER_BASE 4'294'967'296
 
@@ -18,8 +15,8 @@ class BigInt final {
 
 private:
 
-    void removeExtraZeros(BigInt &);
-    std::pair<BigInt, BigInt> divide(BigInt const &);
+    static void removeExtraZeros(BigInt &);
+    std::pair<BigInt, BigInt> divide(BigInt const &) const;
 
 private:
 
@@ -27,8 +24,6 @@ private:
     std::vector<uint32_t> digits_ = {0};
 
 public:
-
-    bool eqZero() const;
 
     BigInt(
             const unsigned int *digits,

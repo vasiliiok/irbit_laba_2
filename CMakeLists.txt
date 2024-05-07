@@ -3,4 +3,4 @@ project(irbit_laba_2)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(1 test.cpp big_integer.h big_integer.cpp)
+add_executable(test test.cpp big_integer.cpp)

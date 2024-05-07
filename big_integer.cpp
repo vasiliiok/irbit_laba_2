@@ -1,10 +1,8 @@
-#include <iostream>
 #include <ctime>
 #include "big_integer.h"
-//TODO: Зменить все приведения типов на плюсовые
 //TODO: Проверить знаки в отношениях порядков
 
-std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) {
+std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) const {
     //TODO: Как это работает??
     if (divisor.digits_.size() == 1) {
         BigInt copy = *this;
@@ -12,11 +10,16 @@ std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) {
         uint32_t carry = 0;
 
         for (int i = copy.digits_.size() - 1; i >= 0; --i) {
-            temp = BIG_INTEGER_BASE * carry +
-                   static_cast<uint64_t>(copy.digits_[i]);
 
-            copy.digits_[i] = temp / divisor.digits_.front();
-            carry = temp % divisor.digits_.front();
+            temp = (BIG_INTEGER_BASE *
+                    static_cast<uint64_t>(carry) +
+                    static_cast<uint64_t>(copy.digits_[i]));
+
+            copy.digits_[i] = (temp /
+                    static_cast<uint64_t>(divisor.digits_.front()));
+
+            carry = (temp %
+                    static_cast<uint64_t>(divisor.digits_.front()));
         }
 
         removeExtraZeros(copy);
@@ -32,7 +35,7 @@ std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) {
     BigInt carry;
     bool carry_less_divisor;
 
-    while (potential_result != 0) {
+    do {
         potential_result = (start_range + end_range) / 2;
         result = potential_result * divisor;
         carry = *this - result;
@@ -46,7 +49,7 @@ std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) {
         } else {
             start_range = potential_result;
         }
-    }
+    } while (potential_result != 0);
 
     throw std::logic_error("Error in divide function!");
 }
@@ -60,7 +63,7 @@ void BigInt::removeExtraZeros(BigInt &obj) {
         size = 1;
     }
     obj.digits_.resize(size);
-    obj.digits_.shrink_to_fit();
+    //obj.digits_.shrink_to_fit(); TODO: Оно тут надо?
 }
 
 BigInt::BigInt(uint32_t number) {
@@ -70,11 +73,10 @@ BigInt::BigInt(uint32_t number) {
 BigInt::BigInt(int32_t number) {
     if (number < 0) {
         negative_ = true;
-        number *= -1;
+        number = -number;
     }
-    //TODO: Okey??
-    uint32_t new_number = number;
-    digits_.front() = new_number;
+
+    digits_.front() = static_cast<uint32_t>(number);
 }
 
 BigInt::BigInt(
@@ -89,14 +91,15 @@ BigInt::BigInt(
         throw std::logic_error("Digits array length must be GT 0");
     }
 
+    digits_.reserve(size);
     for (int i = 0; i < size - 1; ++i) {
         digits_.push_back(digits_arr[i]);
     }
 }
 
 BigInt::BigInt(
-        const std::vector<unsigned int> &digits)
-{
+        const std::vector<unsigned int> &digits) {
+
     if (digits.empty()) {
         throw std::logic_error("Vector must not be empty");
     }
@@ -121,16 +124,17 @@ BigInt::BigInt(
 
         if (buffer.size() == max_base_characters) {
 
-            (*this) *= base;
-            (*this) += stoi(buffer);
+            *this *= base;
+            *this += static_cast<uint32_t>(
+                    stoi(buffer));
 
             buffer.clear();
         }
     }
-
     if (!buffer.empty()) {
-        (*this) *= base;
-        (*this) += stoi(buffer);
+        *this *= base;
+        *this += static_cast<uint32_t>(
+                stoi(buffer));
     }
 }
 
@@ -176,7 +180,9 @@ BigInt &BigInt::operator+=(
     uint64_t temp;
     short carry = 0;
     for (size_t i = 0; i < other_size; ++i) {
-        temp = (uint64_t)digits_[i] + other.digits_[i] + carry;
+        temp = (static_cast<uint64_t>(digits_[i]) +
+                static_cast<uint64_t>(other.digits_[i]) +
+                static_cast<uint64_t>(carry));
 
         if (temp >= BIG_INTEGER_BASE) {
             digits_[i] = temp - BIG_INTEGER_BASE;
@@ -211,8 +217,33 @@ BigInt BigInt::operator+(
     return BigInt(*this) += other;
 }
 
+BigInt BigInt::operator-() const {
+    BigInt temp = *this;
+    temp.negative_ = !temp.negative_;
+    return temp;
+}
+
 BigInt &BigInt::operator-=(
     BigInt const &other) {
+
+    // If smt negative - do it positive
+    // and use +=
+    if (negative_ && other.negative_) {
+        return *this += -other;
+    }
+
+    if (negative_ && !other.negative_) {
+        negative_ = false;
+        *this += other;
+        negative_ = true;
+        return *this;
+    }
+
+    if (!negative_ && other.negative_) {
+        return *this += other;
+    }
+
+    // Check is smt EQ zero
     if (*this == 0 && other == 0) {
         return *this;
     }
@@ -229,21 +260,6 @@ BigInt &BigInt::operator-=(
         return *this;
     }
 
-    if (negative_ && other.negative_) {
-        return *this += -other;
-    }
-
-    if (negative_ && !other.negative_) {
-        negative_ = false;
-        *this += other;
-        negative_ = true;
-        return *this;
-    }
-
-    if (!negative_ && other.negative_) {
-        return *this += other;
-    }
-
     if (*this < other) {
         *this = other - *this;
         negative_ = true;
@@ -251,12 +267,10 @@ BigInt &BigInt::operator-=(
     }
 
     if (*this == other) {
-        //TODO:
-        *this = 0;
-        negative_ = false;
-        return *this;
+        return *this = 0;
     }
 
+    // positive - positive
     int64_t temp;
     short carry = 0;
     size_t other_size = other.digits_.size();
@@ -290,15 +304,15 @@ BigInt BigInt::operator-(
 BigInt &BigInt::operator*=(
     BigInt const &other) {
 
-    if (*this == 0 || other == 0) {
-        *this = 0;
-        return *this;
-    }
-
     if (!negative_ && other.negative_) {
         negative_ = true;
     } else if (negative_ && other.negative_) {
         negative_ = false;
+    }
+
+    if (*this == 0 || other == 0) {
+        *this = 0;
+        return *this;
     }
 
     std::vector<uint32_t> result;
@@ -310,7 +324,11 @@ BigInt &BigInt::operator*=(
     uint64_t carry = 0;
     for (int i = 0; i < other.digits_.size(); ++i) {
         for (int j = 0; j < digits_.size(); ++j) {
-            temp = (uint64_t)digits_[j] * (uint64_t)other.digits_[i] + carry;
+
+            temp = (static_cast<uint64_t>(digits_[j]) *
+                    static_cast<uint64_t>(other.digits_[i]) +
+                    static_cast<uint64_t>(carry));
+
             if (temp >= BIG_INTEGER_BASE) {
                 carry = temp / BIG_INTEGER_BASE;
             } else {
@@ -333,7 +351,7 @@ BigInt BigInt::operator*(
     BigInt const &other) const {
     return BigInt(*this) *= other;
 }
-// TODO: division shrink_to_fit
+
 BigInt &BigInt::operator/=(
     BigInt const &other) {
 
@@ -364,7 +382,7 @@ BigInt &BigInt::operator/=(
 
 BigInt BigInt::operator/(
     BigInt const &other) const {
-    return BigInt(*this) /= other;
+    return divide(other).first;
 }
 
 BigInt &BigInt::operator%=(
@@ -380,16 +398,22 @@ BigInt BigInt::operator%(
 
 bool BigInt::operator==(
     BigInt const &other) const {
-    if (digits_.size() == other.digits_.size()) {
-        for (int i = 0; i < digits_.size(); ++i) {
-            if (digits_[i] != other.digits_[i]) {
-                return false;
-            }
-        }
-        return true;
+
+    if (negative_ != other.negative_) {
+        return false;
     }
 
-    return false;
+    if (digits_.size() != other.digits_.size()) {
+        return false;
+    }
+
+    for (int i = 0; i < digits_.size(); ++i) {
+        if (digits_[i] != other.digits_[i]) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool BigInt::operator!=(
@@ -537,7 +561,7 @@ BigInt BigInt::operator<<(
 
     BigInt copy = *this;
     for (uint32_t &digit : copy.digits_) {
-        digit << shift_value;
+        digit <<= shift_value;
     }
 
     return copy;
@@ -548,7 +572,7 @@ BigInt BigInt::operator>>(
 
     BigInt copy = *this;
     for (uint32_t &digit : copy.digits_) {
-        shift_value >> digit;
+        shift_value >>= digit;
     }
 
     return copy;
@@ -574,7 +598,7 @@ std::ostream &operator<<(
     std::reverse(result.begin(), result.end());
 
     //---------------------------------
-    std::cout << "Conversion to 10 base takes: " << std::clock() - start_time << " milliseconds"  << std::endl  << std::endl;
+    stream << "Conversion to 10 base takes: " << std::clock() - start_time << " milliseconds"  << std::endl  << std::endl;
     //---------------------------------
 
     stream << result;
@@ -582,15 +606,14 @@ std::ostream &operator<<(
     return stream;
 }
 
+// TODO: Что оно должно делать?
 std::istream &operator>>(
     std::istream &stream,
     BigInt &value) {
 
-}
+    std::string input;
+    stream >> input;
+    value = BigInt(input);
 
-BigInt BigInt::operator-() const {
-    BigInt temp = *this;
-    temp.negative_ = !temp.negative_;
-    return temp;
+    return stream;
 }
-
