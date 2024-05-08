@@ -1,6 +1,5 @@
 #include <ctime>
 #include "big_integer.h"
-//TODO: Проверить знаки в отношениях порядков
 
 std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) const {
     //TODO: Как это работает??
@@ -582,23 +581,35 @@ std::ostream &operator<<(
     std::ostream &stream,
     const BigInt &value) {
 
-    std::string result;
-    result.reserve(value.digits_.size() * 10);
+    //---------------------------------
+    //uint64_t start_time = std::clock();
+    //---------------------------------
 
-    //---------------------------------
-    uint64_t start_time = std::clock();
-    //---------------------------------
+    if (value == 0) {
+        stream << 0;
+        return stream;
+    }
 
     BigInt temp = value;
+    if (temp < 0) {
+        temp.negative_ = false;
+    }
+
+    std::string result;
+    result.reserve(value.digits_.size() * 10 + 1);
+
     while(temp > 0) {
         auto divide_result = temp.divide(10);
         temp = divide_result.first;
         result.push_back(uint32_t(divide_result.second) + '0');
     }
+    if (value < 0) {
+        result.push_back('-');
+    }
     std::reverse(result.begin(), result.end());
 
     //---------------------------------
-    stream << "Conversion to 10 base takes: " << std::clock() - start_time << " milliseconds"  << std::endl  << std::endl;
+    //stream << "Conversion to 10 base takes: " << std::clock() - start_time << " milliseconds"  << std::endl  << std::endl;
     //---------------------------------
 
     stream << result;

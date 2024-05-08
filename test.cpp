@@ -5,7 +5,63 @@
 
 
 int main() {
+    BigInt num_1("111111111111111111111");
+    BigInt num_2("2222222222222222222222222222222222");
 
+
+    // Сложение
+    std::cout << num_1 << " + " << num_2 << " = ";
+    std::cout << num_1 + num_2 << std::endl;
+
+    std::cout << num_2 << " + " << num_1 << " = ";
+    std::cout << num_2 + num_1 << std::endl;
+
+    std::cout << std::endl;
+    // Сложение
+
+
+    // Вычитание
+    std::cout << num_1 << " - " << num_2 << " = ";
+    std::cout << num_1 - num_2 << std::endl;
+
+    std::cout << num_2 << " - " << num_1 << " = ";
+    std::cout << num_2 - num_1 << std::endl;
+
+    std::cout << std::endl;
+    // Вычитание
+
+
+    // Умножение
+    std::cout << num_1 << " * " << num_2 << " = ";
+    std::cout << num_1 * num_2 << std::endl;
+
+    std::cout << num_2 << " * " << num_1 << " = ";
+    std::cout << num_2 * num_1 << std::endl;
+
+    std::cout << std::endl;
+    // Умножение
+
+
+    // Деление
+    std::cout << num_1 << " / " << num_2 << " = ";
+    std::cout << num_1 / num_2 << std::endl;
+
+    std::cout << num_2 << " / " << num_1 << " = ";
+    std::cout << num_2 / num_1 << std::endl;
+
+    std::cout << std::endl;
+    // Деление
+
+
+    // Остаток от деления
+    std::cout << num_1 << " % " << num_2 << " = ";
+    std::cout << num_1 % num_2 << std::endl;
+
+    std::cout << num_2 << " % " << num_1 << " = ";
+    std::cout << num_2 % num_1 << std::endl;
+
+    std::cout << std::endl;
+    // Остаток от деления
 }
 
 
