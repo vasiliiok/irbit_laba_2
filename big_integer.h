@@ -8,6 +8,7 @@
 #include <cmath>
 #include <ostream>
 #include <algorithm>
+#include <sstream>
 
 #define BIG_INTEGER_BASE 4'294'967'296
 
@@ -16,7 +17,7 @@ class BigInt final {
 private:
 
     static void removeExtraZeros(BigInt &);
-    std::pair<BigInt, BigInt> divide(BigInt const &) const;
+    [[nodiscard]] std::pair<BigInt, BigInt> divide(BigInt const &) const;
 
 private:
 

@@ -1,6 +1,9 @@
 #include <ctime>
 #include "big_integer.h"
-
+// TODO Деление через битовые сдвиги
+// TODO std::optional<T>
+// TODO std::variant
+// TODO Вывод не по одной цифре
 std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) const {
     //TODO: Как это работает??
     if (divisor.digits_.size() == 1) {
@@ -62,7 +65,7 @@ void BigInt::removeExtraZeros(BigInt &obj) {
         size = 1;
     }
     obj.digits_.resize(size);
-    //obj.digits_.shrink_to_fit(); TODO: Оно тут надо?
+    obj.digits_.shrink_to_fit();
 }
 
 BigInt::BigInt(uint32_t number) {
@@ -321,24 +324,30 @@ BigInt &BigInt::operator*=(
 
     uint64_t temp;
     uint64_t carry = 0;
-    for (int i = 0; i < other.digits_.size(); ++i) {
-        for (int j = 0; j < digits_.size(); ++j) {
+    size_t position;
+    for (size_t i = 0; i < other.digits_.size(); ++i) {
+        for (size_t j = 0; j < digits_.size(); ++j) {
+            position = i + j;
 
-            temp = (static_cast<uint64_t>(digits_[j]) *
-                    static_cast<uint64_t>(other.digits_[i]) +
-                    static_cast<uint64_t>(carry));
+            temp = (static_cast<uint64_t>(other.digits_[i]) *
+                    static_cast<uint64_t>(digits_[j]) +
+                    carry);
 
             if (temp >= BIG_INTEGER_BASE) {
                 carry = temp / BIG_INTEGER_BASE;
             } else {
                 carry = 0;
             }
-            result[j + i] += temp - BIG_INTEGER_BASE * carry;
+
+            result[position] += temp - BIG_INTEGER_BASE * carry;
         }
-    }
-    if (carry) {
-        result.resize(max_digit);
-        result.back() += carry;
+        if (carry) {
+            if (position + 1 == result.size()) {
+                result.resize(max_digit);
+            }
+            result[position + 1] += carry;
+            carry = 0;
+        }
     }
 
     digits_ = result;
@@ -378,6 +387,7 @@ BigInt &BigInt::operator/=(
 
     return (*this = divide(other).first);
 }
+
 
 BigInt BigInt::operator/(
     BigInt const &other) const {
@@ -581,6 +591,12 @@ std::ostream &operator<<(
     std::ostream &stream,
     const BigInt &value) {
 
+   /* stream << "Array: ";
+    for (auto num : value.digits_) {
+        stream << num << " ";
+    }
+    stream << "\n";*/
+
     //---------------------------------
     //uint64_t start_time = std::clock();
     //---------------------------------
@@ -595,17 +611,18 @@ std::ostream &operator<<(
         temp.negative_ = false;
     }
 
+    std::ostringstream result_stream;
     std::string result;
-    result.reserve(value.digits_.size() * 10 + 1);
 
     while(temp > 0) {
         auto divide_result = temp.divide(10);
         temp = divide_result.first;
-        result.push_back(uint32_t(divide_result.second) + '0');
+        result_stream << uint32_t(divide_result.second);
     }
     if (value < 0) {
-        result.push_back('-');
+        result_stream << '-';
     }
+    result = result_stream.str();
     std::reverse(result.begin(), result.end());
 
     //---------------------------------
