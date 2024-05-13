@@ -43,6 +43,8 @@ std::pair<BigInt, BigInt> BigInt::divide(BigInt const &divisor) const {
         carry = *this - result;
         carry_less_divisor = (carry >= 0) && (carry < divisor);
 
+        // Correct: Array: 1215752192 23
+
         if (carry_less_divisor) {
             return {potential_result, carry};
         }
@@ -591,11 +593,11 @@ std::ostream &operator<<(
     std::ostream &stream,
     const BigInt &value) {
 
-   /* stream << "Array: ";
+    stream << "Array: ";
     for (auto num : value.digits_) {
         stream << num << " ";
     }
-    stream << "\n";*/
+    stream << "\n";
 
     //---------------------------------
     //uint64_t start_time = std::clock();

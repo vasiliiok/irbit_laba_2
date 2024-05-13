@@ -3,10 +3,15 @@
 #include "big_integer.h"
 
 int main() {
-    BigInt num_2("100000000000000000000000000000000000");
-    BigInt num_1("10000000000000000000000000");
+    BigInt num_2("1000000000000000000000");
+    // Array: 3735027712 902409669 54
+    BigInt num_1("10000000000");
+    // Array: 1410065408 2
 
-    num_2 / num_1;
+    // Correct: 100,000,000,000
+    // Correct: Array: 1215752192 23
+
+    std::cout << (num_2 /= num_1) << std::endl;
 }
 
 /*int main() {
